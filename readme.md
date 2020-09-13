@@ -90,6 +90,11 @@ This would however require a change of the utilized return type from
   provides a bit of background information. The `RecyclableFutureAllocator`
   is based on the findings that `Future`s returned from one object are typically
   consumed before the next `Future` is generated.
+- `DynamicFuture` uses an object representation which is similar to what Rust
+  is already utilizing for
+  [std::task::Waker](https://doc.rust-lang.org/std/task/struct.Waker.html).
+  Both types delegate memory management to a vtable and are not opinionated
+  about how their internal state is stored. 
 
 ### Is it worth it? / Benchmark results
 
