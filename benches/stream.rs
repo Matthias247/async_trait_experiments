@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 
-pub use async_trait_experiments::{DynamicFuture, RecyclableFutureAllocator};
+pub use async_trait_experiments::{box_future, DynamicFuture, RecyclableFutureAllocator};
 
 pub struct NoTraitStream {
     pub current: u32,
@@ -123,6 +123,34 @@ impl DynamicFutureAsyncTraitStream for DynamicRecyclableFutureAsyncTraitStreamIm
     }
 }
 
+#[derive(Default)]
+pub struct DynamicBoxedFutureAsyncTraitStreamImpl {
+    state: StreamState,
+}
+
+impl DynamicBoxedFutureAsyncTraitStreamImpl {
+    pub fn new(current: u32) -> Self {
+        Self {
+            state: StreamState { current },
+        }
+    }
+}
+
+impl DynamicFutureAsyncTraitStream for DynamicBoxedFutureAsyncTraitStreamImpl {
+    fn next<'a>(&'a mut self) -> DynamicFuture<'a, Option<u32>> {
+        let state = &mut self.state;
+
+        box_future(async move {
+            if state.current == 0 {
+                None
+            } else {
+                state.current -= 1;
+                Some(state.current)
+            }
+        })
+    }
+}
+
 struct WrappingStreamState {
     inner: Box<dyn DynamicFutureAsyncTraitStream>,
 }
@@ -149,5 +177,27 @@ impl DynamicFutureAsyncTraitStream for DynamicRecyclableFutureAsyncTraitWrapping
 
         self.next_recycler
             .allocate(async move { state.inner.next().await })
+    }
+}
+
+pub struct DynamicBoxedFutureAsyncTraitWrappingStreamImpl {
+    state: WrappingStreamState,
+}
+
+impl DynamicBoxedFutureAsyncTraitWrappingStreamImpl {
+    pub fn new(current: u32) -> Self {
+        Self {
+            state: WrappingStreamState {
+                inner: Box::new(DynamicRecyclableFutureAsyncTraitStreamImpl::new(current)),
+            },
+        }
+    }
+}
+
+impl DynamicFutureAsyncTraitStream for DynamicBoxedFutureAsyncTraitWrappingStreamImpl {
+    fn next<'a>(&'a mut self) -> DynamicFuture<'a, Option<u32>> {
+        let state = &mut self.state;
+
+        box_future(async move { state.inner.next().await })
     }
 }

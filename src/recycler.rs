@@ -1,4 +1,4 @@
-use crate::{DynamicFuture, DynamicFutureVtable};
+use crate::{box_future, DynamicFuture, DynamicFutureVtable};
 use std::{
     alloc::Layout,
     future::Future,
@@ -65,7 +65,7 @@ impl RecyclableFutureAllocator {
             // We don't worry about the alignment - since the alignment of the
             // header should fit everything else.
             if (*self.recycled).size != Layout::for_value(&fut).size() {
-                return new_recyclable_future(fut, 1);
+                return box_future(fut);
             }
 
             // If the current futures storage is no longer in use we can reuse
@@ -85,7 +85,7 @@ impl RecyclableFutureAllocator {
                 Err(2) => {
                     // The future is still in use.
                     // Allocate a fresh future
-                    new_recyclable_future(fut, 1)
+                    box_future(fut)
                 }
                 Err(refcount) => panic!("Invalid future refcount of {}", refcount),
             }

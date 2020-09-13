@@ -115,14 +115,17 @@ using `Box<Pin<dyn Future>>` - if the method on the trait is called at least
 2 times.
 
 ```
-nexted_stream_benches/no trait
-                        time:   [504.70 ns 505.75 ns 506.89 ns]
+nested_stream_benches/no trait
+                        time:   [89.082 ns 89.216 ns 89.380 ns]
 
-nexted_stream_benches/async trait obj
-                        time:   [5.4279 us 5.4464 us 5.4654 us]
+nested_stream_benches/async-trait
+                        time:   [5.2282 us 5.2461 us 5.2624 us]
 
-nexted_stream_benches/recyclable async trait obj
-                        time:   [1.5125 us 1.5165 us 1.5215 us]
+nested_stream_benches/non recyclable DynamicFuture
+                        time:   [3.2658 us 3.2727 us 3.2804 us]
+
+nested_stream_benches/recyclable DynamicFuture
+                        time:   [1.5016 us 1.5052 us 1.5099 us]
 ```
 
 On Linux using jemalloc the performance using the recycler is still better - but
@@ -130,13 +133,16 @@ the gap is lower:
 
 ```
 nested_stream_benches/no trait
-                        time:   [527.45 ns 528.91 ns 530.49 ns]
+                        time:   [89.635 ns 89.851 ns 90.093 ns]
 
-nested_stream_benches/async trait obj
-                        time:   [2.0601 us 2.0622 us 2.0644 us]
+nested_stream_benches/async-trait
+                        time:   [2.3594 us 2.3711 us 2.3826 us]
 
-nested_stream_benches/recyclable async trait obj
-                        time:   [1.5360 us 1.5388 us 1.5416 us]
+nested_stream_benches/non recyclable DynamicFuture
+                        time:   [1.6196 us 1.6252 us 1.6316 us]
+
+nested_stream_benches/recyclable DynamicFuture
+                        time:   [1.5435 us 1.5485 us 1.5531 us]
 ```
 
 When using glibc malloc the performance using the recycler actually seems lower -
@@ -145,13 +151,16 @@ allocations:
 
 ```
 nested_stream_benches/no trait
-                        time:   [520.96 ns 521.64 ns 522.44 ns]
+                        time:   [89.435 ns 89.653 ns 89.867 ns]
 
-nested_stream_benches/async trait obj
-                        time:   [1.4124 us 1.4145 us 1.4166 us]
+nested_stream_benches/async-trait
+                        time:   [1.3948 us 1.3965 us 1.3986 us]
 
-nested_stream_benches/recyclable async trait obj
-                        time:   [1.5737 us 1.5763 us 1.5789 us]
+nested_stream_benches/non recyclable DynamicFuture
+                        time:   [1.1688 us 1.1816 us 1.1949 us]
+
+nested_stream_benches/recyclable DynamicFuture
+                        time:   [1.5075 us 1.5116 us 1.5158 us]
 ```
 
 However all those benchmark results might not translate well to real application

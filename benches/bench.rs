@@ -11,11 +11,13 @@ use criterion::{criterion_group, criterion_main, Benchmark, Criterion};
 mod adder;
 use adder::{
     AsyncTraitAdder, AsyncTraitAdderImpl, BoxPinFutureTraitAdder, BoxPinFutureTraitAdderImpl,
-    DynamicFutureAsyncTraitAdder, DynamicRecyclableFutureAsyncTraitAdderImpl, NoTraitAdder,
+    DynamicBoxedFutureAsyncTraitAdderImpl, DynamicFutureAsyncTraitAdder,
+    DynamicRecyclableFutureAsyncTraitAdderImpl, NoTraitAdder,
 };
 mod stream;
 use stream::{
     AsyncTraitStream, AsyncTraitStreamImpl, AsyncTraitWrappingStreamImpl,
+    DynamicBoxedFutureAsyncTraitStreamImpl, DynamicBoxedFutureAsyncTraitWrappingStreamImpl,
     DynamicFutureAsyncTraitStream, DynamicRecyclableFutureAsyncTraitStreamImpl,
     DynamicRecyclableFutureAsyncTraitWrappingStreamImpl, NoTraitStream, NoTraitWrappingStream,
 };
@@ -37,7 +39,7 @@ fn adder_benches(c: &mut Criterion) {
                 });
             });
         })
-        .with_function("async trait obj", |b| {
+        .with_function("async-trait", |b| {
             b.iter(|| {
                 futures::executor::block_on(async {
                     let mut adder = AsyncTraitAdderImpl::default();
@@ -48,7 +50,7 @@ fn adder_benches(c: &mut Criterion) {
                 });
             });
         })
-        .with_function("box pin future trait obj", |b| {
+        .with_function("Pin<Box<dyn Future>>", |b| {
             b.iter(|| {
                 futures::executor::block_on(async {
                     let mut adder = BoxPinFutureTraitAdderImpl::default();
@@ -59,7 +61,18 @@ fn adder_benches(c: &mut Criterion) {
                 });
             });
         })
-        .with_function("recyclable async trait obj", |b| {
+        .with_function("non recyclable DynamicFuture", |b| {
+            b.iter(|| {
+                futures::executor::block_on(async {
+                    let mut adder = DynamicBoxedFutureAsyncTraitAdderImpl::default();
+                    for _ in 0..ADDER_ITERATIONS {
+                        assert_eq!(25, adder.add_obj(5, 20).await);
+                        assert_eq!(25, adder.current());
+                    }
+                });
+            });
+        })
+        .with_function("recyclable DynamicFuture", |b| {
             b.iter(|| {
                 futures::executor::block_on(async {
                     let mut adder = DynamicRecyclableFutureAsyncTraitAdderImpl::default();
@@ -84,7 +97,7 @@ fn stream_benches(c: &mut Criterion) {
                 });
             });
         })
-        .with_function("async trait obj", |b| {
+        .with_function("async-trait", |b| {
             b.iter(|| {
                 futures::executor::block_on(async {
                     let mut stream = AsyncTraitStreamImpl::new(STREAM_ITERATIONS);
@@ -92,7 +105,15 @@ fn stream_benches(c: &mut Criterion) {
                 });
             });
         })
-        .with_function("recyclable async trait obj", |b| {
+        .with_function("non recyclable DynamicFuture", |b| {
+            b.iter(|| {
+                futures::executor::block_on(async {
+                    let mut stream = DynamicBoxedFutureAsyncTraitStreamImpl::new(STREAM_ITERATIONS);
+                    while let Some(_item) = stream.next().await {}
+                });
+            });
+        })
+        .with_function("recyclable DynamicFuture", |b| {
             b.iter(|| {
                 futures::executor::block_on(async {
                     let mut stream =
@@ -106,7 +127,7 @@ fn stream_benches(c: &mut Criterion) {
 
 fn nested_stream_benches(c: &mut Criterion) {
     c.bench(
-        "nexted_stream_benches",
+        "nested_stream_benches",
         Benchmark::new("no trait", |b| {
             b.iter(|| {
                 let mut stream = NoTraitWrappingStream::new(STREAM_ITERATIONS);
@@ -115,7 +136,7 @@ fn nested_stream_benches(c: &mut Criterion) {
                 });
             });
         })
-        .with_function("async trait obj", |b| {
+        .with_function("async-trait", |b| {
             b.iter(|| {
                 futures::executor::block_on(async {
                     let mut stream = AsyncTraitWrappingStreamImpl::new(STREAM_ITERATIONS);
@@ -123,7 +144,16 @@ fn nested_stream_benches(c: &mut Criterion) {
                 });
             });
         })
-        .with_function("recyclable async trait obj", |b| {
+        .with_function("non recyclable DynamicFuture", |b| {
+            b.iter(|| {
+                futures::executor::block_on(async {
+                    let mut stream =
+                        DynamicBoxedFutureAsyncTraitWrappingStreamImpl::new(STREAM_ITERATIONS);
+                    while let Some(_item) = stream.next().await {}
+                });
+            });
+        })
+        .with_function("recyclable DynamicFuture", |b| {
             b.iter(|| {
                 futures::executor::block_on(async {
                     let mut stream =

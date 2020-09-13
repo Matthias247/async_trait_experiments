@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use async_trait_experiments::{DynamicFuture, RecyclableFutureAllocator};
+use async_trait_experiments::{box_future, DynamicFuture, RecyclableFutureAllocator};
 use std::{
     future::Future,
     pin::Pin,
@@ -94,6 +94,32 @@ impl DynamicFutureAsyncTraitAdder for DynamicRecyclableFutureAsyncTraitAdderImpl
         let state = &mut self.state;
 
         self.add_obj_recycler.allocate(async move {
+            let mut storage = [0u32; 64];
+            let result = a + b;
+            Yielder::new(NR_YIELDS).await;
+            state.current = result;
+            storage[4] = result;
+            storage[4]
+        })
+    }
+}
+
+#[derive(Default)]
+pub struct DynamicBoxedFutureAsyncTraitAdderImpl {
+    state: AdderState,
+}
+
+impl DynamicBoxedFutureAsyncTraitAdderImpl {
+    pub fn current(&self) -> u32 {
+        self.state.current
+    }
+}
+
+impl DynamicFutureAsyncTraitAdder for DynamicBoxedFutureAsyncTraitAdderImpl {
+    fn add_obj<'a>(&'a mut self, a: u32, b: u32) -> DynamicFuture<'a, u32> {
+        let state = &mut self.state;
+
+        box_future(async move {
             let mut storage = [0u32; 64];
             let result = a + b;
             Yielder::new(NR_YIELDS).await;
