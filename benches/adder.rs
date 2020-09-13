@@ -69,7 +69,7 @@ impl BoxPinFutureTraitAdder for BoxPinFutureTraitAdderImpl {
 }
 
 pub trait DynamicFutureAsyncTraitAdder {
-    fn add_obj<'a>(&'a mut self, a: u32, b: u32) -> DynamicFuture<u32>;
+    fn add_obj<'a>(&'a mut self, a: u32, b: u32) -> DynamicFuture<'a, u32>;
 }
 
 #[derive(Default)]

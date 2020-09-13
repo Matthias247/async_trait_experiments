@@ -85,7 +85,7 @@ impl AsyncTraitStream for AsyncTraitWrappingStreamImpl {
 }
 
 pub trait DynamicFutureAsyncTraitStream {
-    fn next<'a>(&'a mut self) -> DynamicFuture<Option<u32>>;
+    fn next<'a>(&'a mut self) -> DynamicFuture<'a, Option<u32>>;
 }
 
 #[derive(Default)]
